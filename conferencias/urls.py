@@ -19,5 +19,5 @@ from app_registro import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('participantess/', views.index, name="index"),
+    path('participantes/', views.index, name="index"),
 ]
