@@ -1,9 +1,42 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Productos
+    Participantes
 {% endblock %}
 
 {% block container %}
-    <h1>La couta a pagar es de {{ couta }}</h1>
+
+    <!-- <h1>Lista de participantes: {{ participantes|length }}</h1> -->
+
+    <div class="row">
+        <!-- formulario-->
+        <div class="col-3">
+
+        </div>
+        <!-- datos-->
+        <div class="col-9">
+            <h2>Lista de participantes: {{ participantes|length }}</h2>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Correo</th>
+                        <th>twitter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in participantes %}
+                        <tr>
+                            <td>{{ p.nombre }}</td>
+                            <td>{{ p.apellido }}</td>
+                            <td>{{ p.correo }}</td>
+                            <td>{{ p.twitter }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 {% endblock %}
