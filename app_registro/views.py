@@ -1,101 +1,74 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-
-# Create your views here.
-
-participantes = [
-    {
-        'nombre': 'Juan',
-        'apellido': 'Lopez',
-        'correo': 'juan@gmail.com',
-        'twitter': 'juan.lopez'
-    },
-    {
-        'nombre': 'Maria',
-        'apellido': 'Gomez',
-        'correo': 'maria@gmail.com',
-        'twitter': 'maria.gomez'
-    },
-    {
-        'nombre': 'Karla',
-        'apellido': 'Herrea',
-        'correo': 'karla.herrea@gmail.com',
-        'twitter': 'karla.herrera'
-    },
-    {
-        'nombre': 'Josue',
-        'apellido': 'Alvarez',
-        'correo': 'josue@gmail.com',
-        'twitter': 'josuetec2003'
-    },
-]
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+from .models import Participante, Conferencista
 
 def index(request):
+    return render(request, 'registro/index.html')
 
-    #clase del 24/05/2021
-
-    #import pdb; pdb.set_trace()
-
-    #Parametros GET almacenados en variables de python
-    # nombre = request.GET.get('nombre')
-    # apellido = request.GET.get('apellido')
-    # edad = request.GET.get('edad')
-    # return HttpResponse(f'Buenas noches {nombre} {apellido}, su edad es: {edad} años???')
-
-    #clase del 25/05/2021
-    #name = request.GET.get('name')
-
-    # variable GET          : name
-    # variable de python    : n
-    #variable de plantilla  : x
-
-
-    # Enviar valores a la plantilla a traves del contexto
-
-    # Recibir por GET los parametros para calcular la couta de un prestamo bancario
-    # monto: m, tasa: r, plazo: n
-
-    # paso 1
-    # m = int(request.GET.get('m'))
-    # r = int(request.GET.get('r'))
-    # n = int(request.GET.get('n'))
-
-    # # paso 2: preparar los datos para suministrarlos a la formula
-    # r = r / 100 / 12
-    # n = n * 12
-
-    # # paso 3: aplicar la formula: c = (m * r) / (1 - (1 + r) ** -n)
-
-    # c = (m * r) / (1 - (1 + r) ** -n)
-
-    # ctx = {
-    #     'couta': c
-    # }
-
+def participantes(request):
     if request.method == 'POST':
         nombre = request.POST.get('nombre')
         apellido = request.POST.get('apellido')
         correo = request.POST.get('correo')
         twitter = request.POST.get('twitter')
 
-        participantes.append({
-            'nombre': nombre,
-            'apellido': apellido,
-            'correo': correo,
-            'twitter': twitter
-        })
+        p = Participante(nombre=nombre, apellido=apellido, correo=correo, twitter=twitter)
+        p.save()
 
-        ctx = {
-            'participantes': participantes
-        }
+        messages.add_message(request, messages.INFO, f'El participante {nombre} {apellido} ha sido registrado con exito')
 
-        # return HttpResponse('El participante ha sido registrado')
-        return render(request, 'registro/index.html', ctx)
+        # return JsonResponse({
+        #     'nombre': nombre,
+        #     'apellido': apellido,
+        #     'correo': correo,
+        #     'twitter': twitter,
+        #     'OK': True,
+        #     'msj': 'El participante ha sido registrado con exito'
+        # })
+
+        # ctx = {
+        #     'participantes': Participante.objects.all().order_by('nombre')
+        # }
+
+        # # return HttpResponse('El participante ha sido registrado')
+        # return render(request, 'registro/participantes.html', ctx)
+ 
+    # Metodo GET, PUT, PATCH, DELETE
+    #Realizar un query set con el ORM de django
+    q = request.GET.get('q')
+
+    if q:
+        data = Participante.objects.filter(nombre__startswith=q).order_by('nombre')
     else:
-        # contexto que va para la plantilla
-        ctx = {
-            'participantes': participantes
-        }
+        data = Participante.objects.all().order_by('nombre')
+    ctx = {
+        'participantes': data,
+        'q':q
+    }
 
-        return render(request, 'registro/index.html', ctx)
+    return render(request, 'registro/participantes.html', ctx)
 
+def conferencistas(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        experiencia = request.POST.get('experiencia')
+
+        c = Conferencista(nombre=nombre, apellido=apellido, experiencia=experiencia)
+        c.save()
+
+        messages.add_message(request, messages.INFO, f'El conferencista {nombre} {apellido} ha sido registrado con exito')
+
+    q = request.GET.get('q')
+
+    if q:
+        data = Conferencista.objects.filter(nombre__startswith=q).order_by('nombre')
+    else:
+        data = Conferencista.objects.all().order_by('nombre')
+    ctx = {
+        'conferencistas': data,
+        'q':q
+    }
+
+    return render(request, 'registro/conferencistas.html', ctx)
