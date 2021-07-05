@@ -1,7 +1,14 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse, Http404
 from django.contrib import messages
+from django.urls import reverse
 from .models import Participante, Conferencista
+from telegram import Bot
+
+TOKEN = '1725870856:AAH0NGgaI-AimtBNOa2sPnRyxpdFDYb_mis'
+GROUP_ID = -1001204226775
+
+bot = Bot(token=TOKEN)
 
 def index(request):
     return render(request, 'registro/index.html')
@@ -16,7 +23,16 @@ def participantes(request):
         p = Participante(nombre=nombre, apellido=apellido, correo=correo, twitter=twitter)
         p.save()
 
-        messages.add_message(request, messages.INFO, f'El participante {nombre} {apellido} ha sido registrado con exito')
+        msj = f'El participante {nombre} {apellido} ha sido registrado con exito.'
+
+        #codigo para enviar un mensaje a grupo de telegram
+
+        try:
+            bot.send_message(chat_id=GROUP_ID, text=msj)
+        except Exception as e:
+            msj += f'<br/><strong>{e}</strong>'
+
+        messages.add_message(request, messages.INFO, msj)
 
         # return JsonResponse({
         #     'nombre': nombre,
@@ -36,6 +52,7 @@ def participantes(request):
  
     # Metodo GET, PUT, PATCH, DELETE
     #Realizar un query set con el ORM de django
+    activo = 'participantes'
     q = request.GET.get('q')
 
     if q:
@@ -43,6 +60,7 @@ def participantes(request):
     else:
         data = Participante.objects.all().order_by('nombre')
     ctx = {
+        'activo': activo,
         'participantes': data,
         'q':q
     }
@@ -59,7 +77,8 @@ def conferencistas(request):
         c.save()
 
         messages.add_message(request, messages.INFO, f'El conferencista {nombre} {apellido} ha sido registrado con exito')
-
+    
+    activo = 'conferencistas'
     q = request.GET.get('q')
 
     if q:
@@ -67,8 +86,39 @@ def conferencistas(request):
     else:
         data = Conferencista.objects.all().order_by('nombre')
     ctx = {
+        'activo':activo,
         'conferencistas': data,
         'q':q
     }
 
     return render(request, 'registro/conferencistas.html', ctx)
+
+def eliminar_participante(request, id):
+    Participante.objects.get(pk=id).delete()
+    return redirect(reverse('participantes'))
+
+def editar_participante(request, id):
+    par = get_object_or_404(Participante, pk=id)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        correo = request.POST.get('correo')
+        twitter = request.POST.get('twitter')
+
+        par.nombre = nombre
+        par.apellido = apellido
+        par.correo = correo
+        par.twitter = twitter
+        par.save()
+
+    #par = Participante.objects.get(pk=id)
+    data = Participante.objects.all().order_by('nombre')
+
+    ctx = {
+        'activo': 'participantes',
+        'participantes': data,
+        'p': par
+    }
+
+    return render(request, 'registro/participantes.html', ctx)

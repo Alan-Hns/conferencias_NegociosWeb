@@ -22,4 +22,6 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('participantes/', views.participantes, name="participantes"),
     path('conferencistas/', views.conferencistas, name='conferencistas'),
+    path('participantes/<int:id>/eliminar/', views.eliminar_participante, name='eliminar_participante'),
+    path('participantes/<int:id>/editar/', views.editar_participante, name='editar_participante'),
 ]
